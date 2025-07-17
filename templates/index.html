@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Binance Futures Orders</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 32px;
+        }
+
+        .box {
+            background: #161616;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 32px;
+            transition: border-color 0.2s ease;
+        }
+
+        .box:hover {
+            border-color: #3a3a3a;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: 500;
+            font-size: 14px;
+            display: block;
+            margin-bottom: 8px;
+            color: #a1a1a1;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            border: 1px solid #2a2a2a;
+            font-size: 14px;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #4a9eff;
+            background-color: #111111;
+        }
+
+        input:hover,
+        select:hover {
+            border-color: #3a3a3a;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .radio-group label {
+            flex: 1;
+            margin: 0;
+            cursor: pointer;
+            text-align: center;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            font-size: 14px;
+            background-color: #0a0a0a;
+        }
+
+        .radio-group label:hover {
+            border-color: #3a3a3a;
+            background-color: #111111;
+        }
+
+        .radio-group label.buy-option {
+            color: #00d4aa;
+        }
+
+        .radio-group label.sell-option {
+            color: #ff4757;
+        }
+
+        .radio-group input {
+            display: none;
+        }
+
+        .radio-group input:checked+label,
+        .radio-group label:has(input:checked) {
+            background-color: #1a1a1a;
+            border-color: #4a9eff;
+        }
+
+        .button {
+            width: 100%;
+            padding: 16px;
+            background: #153457;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button:hover {
+            background: #204e83;
+            transform: translateY(-1px);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.stop {
+            background: #52171c;
+        }
+
+        .button.stop:hover {
+            background: #61104f;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            background-color: #0a2818;
+            color: #00d4aa;
+            border: 1px solid #1a4a32;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result.error {
+            background-color: #2a0a0a;
+            color: #ff4757;
+            border-color: #4a1a1a;
+        }
+
+        .price-input {
+            position: relative;
+        }
+
+        .price-input::before {
+            content: '$';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .price-input input {
+            padding-left: 28px;
+        }
+
+        .leverage-input {
+            position: relative;
+        }
+
+        .leverage-input::after {
+            content: 'x';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .leverage-input input {
+            padding-right: 28px;
+        }
+
+        .info-note {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #a1a1a1;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            body {
+                padding: 20px 16px;
+            }
+
+            .box {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Limit Orders -->
+        <div class="box">
+            <h2>📈 Limit Orders</h2>
+            <form id="limitForm">
+                <div class="form-group">
+                    <label>Symbol</label>
+                    <input type="text" id="symbol_limit" value="1000PEPEUSDC">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="quantity_limit" value="2200">
+                </div>
+                <div class="form-group">
+                    <label>Buy Price</label>
+                    <div class="price-input">
+                        <input type="number" id="buy_price" value="0.0022737" step="0.0000001">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Sell Price</label>
+                    <div class="price-input">
+                        <input type="number" id="sell_price" value="0.0222912" step="0.0000001">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Leverage</label>
+                    <div class="leverage-input">
+                        <input type="number" id="leverage" value="4" min="1" max="125" step="1">
+                    </div>
+                </div>
+                <button type="submit" class="button">⚡ Place Limit Orders</button>
+                <div id="limit_result" class="result"></div>
+            </form>
+        </div>
+
+        <!-- Stop Limit Orders -->
+        <div class="box">
+            <h2>🛑 Stop-Limit Orders</h2>
+            <div class="info-note">
+                💡 Side (BUY/SELL) is automatically determined based on current market price vs stop price
+            </div>
+            <form id="stopForm">
+                <div class="form-group">
+                    <label>Symbol</label>
+                    <input type="text" id="symbol_stop" value="1000PEPEUSDC">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="quantity_stop" value="2200">
+                </div>
+                <div class="form-group">
+                    <label>Stop-Limit Price</label>
+                    <div class="price-input">
+                        <input type="number" id="stop_price" value="0.0121028" step="0.0000001">
+                    </div>
+                </div>
+                <button type="submit" class="button stop">🎯 Place Stop-Limit Order</button>
+                <div id="stop_result" class="result"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showResult(elementId, message, isError = false) {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.innerHTML = message;
+            resultDiv.className = isError ? 'result error show' : 'result show';
+            setTimeout(() => {
+                resultDiv.className = 'result';
+            }, 5000);
+        }
+
+        document.getElementById('limitForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('limit_result');
+            resultDiv.innerHTML = 'Submitting...';
+            resultDiv.className = 'result show';
+
+            const leverageValue = parseInt(document.getElementById('leverage').value);
+
+            const data = {
+                type: "limit",
+                symbol: document.getElementById('symbol_limit').value,
+                quantity: parseFloat(document.getElementById('quantity_limit').value),
+                buy_price: parseFloat(document.getElementById('buy_price').value),
+                sell_price: parseFloat(document.getElementById('sell_price').value),
+                leverage: leverageValue
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('limit_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+            } catch (error) {
+                showResult('limit_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
+        document.getElementById('stopForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('stop_result');
+            resultDiv.innerHTML = 'Submitting...';
+            resultDiv.className = 'result show';
+
+            const data = {
+                type: "stop",
+                symbol: document.getElementById('symbol_stop').value,
+                quantity: parseFloat(document.getElementById('quantity_stop').value),
+                stop_price: parseFloat(document.getElementById('stop_price').value)
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('stop_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+            } catch (error) {
+                showResult('stop_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
+
+        // Auto-paste clipboard content on click for Stop-Limit Price
+        document.getElementById('stop_price').addEventListener('click', async function () {
+            try {
+                const clipboardText = await navigator.clipboard.readText();
+                if (!isNaN(parseFloat(clipboardText))) {
+                    this.value = parseFloat(clipboardText);
+                } else {
+                    alert('Clipboard does not contain a valid number.');
+                }
+            } catch (err) {
+                console.error('Clipboard access failed:', err);
+                alert('Unable to access clipboard. Ensure HTTPS and user permission.');
+            }
+        });
+
+
+    </script>
+</body>
+
+</html>
