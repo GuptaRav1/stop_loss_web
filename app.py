@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request, jsonify
 from binance.um_futures import UMFutures
-import key as api
+import os
 
 app = Flask(__name__)
 
-API_KEY = api.API_KEY
-API_SECRET = api.API_SECRET
+API_KEY = os.getenv("API_KEY")
+API_SECRET = os.getenv("API_SECRET")
 client = UMFutures(key=API_KEY, secret=API_SECRET)
 
 @app.route('/')
