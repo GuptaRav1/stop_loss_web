@@ -378,6 +378,35 @@
             }
         });
 
+        // Auto-paste clipboard content on click for Buy Price
+        document.getElementById('buy_price').addEventListener('click', async function () {
+            try {
+                const clipboardText = await navigator.clipboard.readText();
+                if (!isNaN(parseFloat(clipboardText))) {
+                    this.value = parseFloat(clipboardText);
+                } else {
+                    alert('Clipboard does not contain a valid number.');
+                }
+            } catch (err) {
+                console.error('Clipboard access failed:', err);
+                alert('Unable to access clipboard. Ensure HTTPS and user permission.');
+            }
+        });
+
+        // Auto-paste clipboard content on click for Sell Price
+        document.getElementById('sell_price').addEventListener('click', async function () {
+            try {
+                const clipboardText = await navigator.clipboard.readText();
+                if (!isNaN(parseFloat(clipboardText))) {
+                    this.value = parseFloat(clipboardText);
+                } else {
+                    alert('Clipboard does not contain a valid number.');
+                }
+            } catch (err) {
+                console.error('Clipboard access failed:', err);
+                alert('Unable to access clipboard. Ensure HTTPS and user permission.');
+            }
+        });
 
         // Auto-paste clipboard content on click for Stop-Limit Price
         document.getElementById('stop_price').addEventListener('click', async function () {
@@ -393,7 +422,6 @@
                 alert('Unable to access clipboard. Ensure HTTPS and user permission.');
             }
         });
-
 
     </script>
 </body>
