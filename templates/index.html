@@ -229,45 +229,6 @@
             color: #a1a1a1;
         }
 
-        .shared-inputs {
-            background: #1a2e1a;
-            border: 1px solid #2a4a2a;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 24px;
-            text-align: center;
-        }
-
-        .shared-inputs h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #00d4aa;
-        }
-
-        .shared-inputs-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            align-items: end;
-        }
-
-        .shared-inputs .form-group {
-            margin-bottom: 0;
-        }
-
-        .shared-inputs input {
-            text-align: center;
-            font-weight: 600;
-        }
-
-        @media (max-width: 600px) {
-            .shared-inputs-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-        }
-
         @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
@@ -287,28 +248,18 @@
 
 <body>
     <div class="container">
-        <!-- Shared Inputs -->
-        <div class="shared-inputs">
-            <h3>📊 Trading Settings</h3>
-            <div class="shared-inputs-grid">
-                <div class="form-group">
-                    <label>Symbol</label>
-                    <input type="text" id="shared_symbol" value="1000PEPEUSDC">
-                </div>
-                <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="number" id="shared_quantity" value="2200">
-                </div>
-            </div>
-            <div style="margin-top: 12px; font-size: 12px; color: #666;">
-                These settings will be used for both limit and stop-limit orders
-            </div>
-        </div>
-
         <!-- Limit Orders -->
         <div class="box">
             <h2>📈 Limit Orders</h2>
             <form id="limitForm">
+                <div class="form-group">
+                    <label>Symbol</label>
+                    <input type="text" id="symbol_limit" value="1000PEPEUSDC">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="quantity_limit" value="2200">
+                </div>
                 <div class="form-group">
                     <label>Buy Price</label>
                     <div class="price-input">
@@ -324,7 +275,7 @@
                 <div class="form-group">
                     <label>Leverage</label>
                     <div class="leverage-input">
-                        <input type="number" id="leverage" value="20" min="1" max="125" step="1">
+                        <input type="number" id="leverage" value="4" min="1" max="125" step="1">
                     </div>
                 </div>
                 <button type="submit" class="button">⚡ Place Limit Orders</button>
@@ -339,6 +290,14 @@
                 💡 Side (BUY/SELL) is automatically determined based on current market price vs stop price
             </div>
             <form id="stopForm">
+                <div class="form-group">
+                    <label>Symbol</label>
+                    <input type="text" id="symbol_stop" value="1000PEPEUSDC">
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="quantity_stop" value="2200">
+                </div>
                 <div class="form-group">
                     <label>Stop-Limit Price</label>
                     <div class="price-input">
@@ -368,12 +327,11 @@
             resultDiv.className = 'result show';
 
             const leverageValue = parseInt(document.getElementById('leverage').value);
-            const sharedQuantity = parseFloat(document.getElementById('shared_quantity').value);
 
             const data = {
                 type: "limit",
                 symbol: document.getElementById('symbol_limit').value,
-                quantity: sharedQuantity,
+                quantity: parseFloat(document.getElementById('quantity_limit').value),
                 buy_price: parseFloat(document.getElementById('buy_price').value),
                 sell_price: parseFloat(document.getElementById('sell_price').value),
                 leverage: leverageValue
@@ -399,12 +357,10 @@
             resultDiv.innerHTML = 'Submitting...';
             resultDiv.className = 'result show';
 
-            const sharedQuantity = parseFloat(document.getElementById('shared_quantity').value);
-
             const data = {
                 type: "stop",
                 symbol: document.getElementById('symbol_stop').value,
-                quantity: sharedQuantity,
+                quantity: parseFloat(document.getElementById('quantity_stop').value),
                 stop_price: parseFloat(document.getElementById('stop_price').value)
             };
 
