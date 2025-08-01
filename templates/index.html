@@ -1,85 +1,177 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <title>Binance Futures Orders</title>
+    <title>Binance Futures Trading Interface</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #0a0a0a;
             color: #ffffff;
             line-height: 1.6;
-            padding: 40px 20px;
+            padding: 20px;
+        }
+        /* Common Trade Parameters Section */
+        .common-params {
+            max-width: 600px;
+            margin: 0 auto 32px auto;
+            background: #161616;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .common-params h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .params-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 32px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
         }
 
         .box {
             background: #161616;
             border: 1px solid #2a2a2a;
             border-radius: 16px;
-            padding: 32px;
+            padding: 24px;
             transition: border-color 0.2s ease;
         }
 
+        .box:hover {
+            border-color: #3a3a3a;
+        }
+
         h2 {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+            justify-content: center;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         label {
             font-weight: 500;
-            font-size: 14px;
+            font-size: 13px;
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #a1a1a1;
         }
 
-        input {
+        input,
+        select {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 12px;
             border-radius: 8px;
             background-color: #0a0a0a;
             color: #ffffff;
             border: 1px solid #2a2a2a;
             font-size: 14px;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #4a9eff;
+            background-color: #111111;
+        }
+
+        input:hover,
+        select:hover {
+            border-color: #3a3a3a;
         }
 
         .button {
             width: 100%;
-            padding: 16px;
-            background: #153457;
-            color: #fff;
+            padding: 14px;
+            color: #ffffff;
             border: none;
             border-radius: 8px;
             font-weight: 600;
             font-size: 14px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button.limit {
+            background: #153457;
+        }
+
+        .button.limit:hover {
+            background: #204e83;
         }
 
         .button.stop {
-            background-color: #52171c;
+            background: #52171c;
+        }
+
+        .button.stop:hover {
+            background: #61104f;
+        }
+
+        .button.market-stop {
+            background: #1a4d1a;
+        }
+
+        .button.market-stop:hover {
+            background: #2d6b2d;
         }
 
         .result {
-            margin-top: 20px;
+            margin-top: 16px;
             padding: 12px 16px;
             border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
             background-color: #0a2818;
             color: #00d4aa;
             border: 1px solid #1a4a32;
             display: none;
+        }
+
+        .result.show {
+            display: block;
         }
 
         .result.error {
@@ -87,60 +179,158 @@
             color: #ff4757;
             border-color: #4a1a1a;
         }
+
+        .price-input {
+            position: relative;
+        }
+
+        .price-input::before {
+            content: '$';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .price-input input {
+            padding-left: 24px;
+        }
+
+        .leverage-input {
+            position: relative;
+        }
+
+        .leverage-input::after {
+            content: 'x';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 14px;
+        }
+
+        .leverage-input input {
+            padding-right: 24px;
+        }
+
+
+        .price-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .params-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .price-grid {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 16px;
+            }
+
+            .box {
+                padding: 20px;
+            }
+
+            .common-params {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
+
 <body>
-    <div class="container">
-
-        <!-- Shared Inputs: Symbol, Quantity, Leverage -->
-        <div class="box">
-            <h2>📦 Common Trade Parameters</h2>
-            <form id="commonForm">
-                <div class="form-group">
-                    <label>Symbol</label>
-                    <input type="text" id="symbol" value="1000PEPEUSDC">
+    <!-- Common Parameters Section -->
+    <div class="common-params">
+        <div class="params-grid">
+            <div class="form-group">
+                <label>Symbol</label>
+                <input type="text" id="common_symbol" value="1000PEPEUSDC">
+            </div>
+            <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="common_quantity" value="5000">
+            </div>
+            <div class="form-group">
+                <label>Leverage</label>
+                <div class="leverage-input">
+                    <input type="number" id="common_leverage" value="50" min="1" max="125" step="1">
                 </div>
-                <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="number" id="quantity" value="2200">
-                </div>
-                <div class="form-group">
-                    <label>Leverage</label>
-                    <input type="number" id="leverage" value="20" min="1" max="125" step="1">
-                </div>
-            </form>
+            </div>
         </div>
+    </div>
 
+    <div class="container">
         <!-- Limit Orders -->
         <div class="box">
             <h2>📈 Limit Orders</h2>
             <form id="limitForm">
-                <div class="form-group">
-                    <label>Buy Price</label>
-                    <input type="number" id="buy_price" value="0.0022737" step="0.0000001">
+                <div class="price-grid">
+                    <div class="form-group">
+                        <label>Buy Price</label>
+                        <div class="price-input">
+                            <input type="number" id="buy_price" value="0.0022737" step="0.0000001">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Sell Price</label>
+                        <div class="price-input">
+                            <input type="number" id="sell_price" value="0.0222912" step="0.0000001">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Sell Price</label>
-                    <input type="number" id="sell_price" value="0.0222912" step="0.0000001">
-                </div>
-                <button type="submit" class="button">⚡ Place Limit Orders</button>
+                <button type="submit" class="button limit">⚡ Place Order</button>
                 <div id="limit_result" class="result"></div>
             </form>
         </div>
 
-        <!-- Stop-Limit Orders -->
+        <!-- Stop Limit Orders -->
         <div class="box">
-            <h2>🛑 Stop-Limit Orders</h2>
+            <h2>🛑 Stop Limit Order</h2>
+   
+            
             <form id="stopForm">
                 <div class="form-group">
                     <label>Stop-Limit Price</label>
-                    <input type="number" id="stop_price" value="0.0121028" step="0.0000001">
+                    <div class="price-input">
+                        <input type="number" id="stop_price" value="0.0121028" step="0.0000001">
+                    </div>
                 </div>
-                <button type="submit" class="button stop">🎯 Place Stop-Limit Order</button>
+                <button type="submit" class="button stop">🎯 Place Stop Limit</button>
                 <div id="stop_result" class="result"></div>
             </form>
         </div>
 
+        <!-- Market Stop for Open Orders -->
+        <div class="box">
+            <h2>🚨 Mkt Stop for Open Order</h2>
+       
+            
+            <form id="marketStopForm">
+                <div class="form-group">
+                    <label>Stop Price</label>
+                    <div class="price-input">
+                        <input type="number" id="market_stop_price" value="0.0121028" step="0.0000001">
+                    </div>
+                </div>
+                <button type="submit" class="button market-stop">🔥 Place Stop Order</button>
+                <div id="market_stop_result" class="result"></div>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -153,15 +343,27 @@
             }, 5000);
         }
 
+        function getCommonParams() {
+            return {
+                symbol: document.getElementById('common_symbol').value,
+                quantity: parseFloat(document.getElementById('common_quantity').value),
+                leverage: parseInt(document.getElementById('common_leverage').value)
+            };
+        }
+
+        // Limit Orders Form
         document.getElementById('limitForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+            // e.preventDefault();
+            const resultDiv = document.getElementById('limit_result');
+            resultDiv.innerHTML = 'Submitting...';
+            resultDiv.className = 'result show';
+
+            const commonParams = getCommonParams();
             const data = {
                 type: "limit",
-                symbol: document.getElementById('symbol').value,
-                quantity: parseFloat(document.getElementById('quantity').value),
+                ...commonParams,
                 buy_price: parseFloat(document.getElementById('buy_price').value),
-                sell_price: parseFloat(document.getElementById('sell_price').value),
-                leverage: parseInt(document.getElementById('leverage').value)
+                sell_price: parseFloat(document.getElementById('sell_price').value)
             };
 
             try {
@@ -178,15 +380,18 @@
             }
         });
 
+        // Stop Limit Orders Form
         document.getElementById('stopForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+            // e.preventDefault();
+            const resultDiv = document.getElementById('stop_result');
+            resultDiv.innerHTML = 'Submitting...';
+            resultDiv.className = 'result show';
 
+            const commonParams = getCommonParams();
             const data = {
                 type: "stop",
-                symbol: document.getElementById('symbol').value,
-                quantity: parseFloat(document.getElementById('quantity').value),
-                stop_price: parseFloat(document.getElementById('stop_price').value),
-                leverage: parseInt(document.getElementById('leverage').value)
+                ...commonParams,
+                stop_price: parseFloat(document.getElementById('stop_price').value)
             };
 
             try {
@@ -203,19 +408,57 @@
             }
         });
 
-        // Clipboard-to-input autofill
-        ['buy_price', 'sell_price', 'stop_price'].forEach(id => {
-            const input = document.getElementById(id);
-            input.addEventListener('click', async function () {
+        // Market Stop Orders Form
+        document.getElementById('marketStopForm').addEventListener('submit', async function (e) {
+            // e.preventDefault();
+            const resultDiv = document.getElementById('market_stop_result');
+            resultDiv.innerHTML = 'Submitting...';
+            resultDiv.className = 'result show';
+
+            const commonParams = getCommonParams();
+            const data = {
+                type: "market_stop",
+                ...commonParams,
+                stop_price: parseFloat(document.getElementById('market_stop_price').value)
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('market_stop_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+            } catch (error) {
+                showResult('market_stop_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
+        // Auto-paste clipboard content on click for price inputs
+        function addClipboardPaste(elementId) {
+            document.getElementById(elementId).addEventListener('click', async function () {
                 try {
-                    const text = await navigator.clipboard.readText();
-                    const value = parseFloat(text);
-                    if (!isNaN(value)) this.value = value;
-                } catch {
-                    alert("Could not access clipboard. Check browser permissions.");
+                    const clipboardText = await navigator.clipboard.readText();
+                    if (!isNaN(parseFloat(clipboardText))) {
+                        this.value = parseFloat(clipboardText);
+                    } else {
+                        alert('Clipboard does not contain a valid number.');
+                    }
+                } catch (err) {
+                    console.error('Clipboard access failed:', err);
+                    alert('Unable to access clipboard. Ensure HTTPS and user permission.');
                 }
             });
-        });
+        }
+
+        // Add clipboard paste functionality to all price inputs
+        addClipboardPaste('buy_price');
+        addClipboardPaste('sell_price');
+        addClipboardPaste('stop_price');
+        addClipboardPaste('market_stop_price');
     </script>
 </body>
+
 </html>

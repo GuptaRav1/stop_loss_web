@@ -97,6 +97,56 @@ def execute_trade():
                     # If it's not a trigger error, return the original error
                     return jsonify({'success': False, 'message': str(primary_error)})
 
+        elif data['type'] == 'market_stop':
+            stop_price = data['stop_price']
+            
+            # Get current market price
+            ticker = client.ticker_price(symbol=symbol)
+            current_price = float(ticker['price'])
+            
+            # Determine the appropriate side based on current price vs stop price
+            if stop_price > current_price:
+                # Stop price is above current price, so we want to BUY when price goes up
+                primary_side = 'BUY'
+                secondary_side = 'SELL'
+            else:
+                # Stop price is below current price, so we want to SELL when price goes down
+                primary_side = 'SELL'
+                secondary_side = 'BUY'
+            
+            # Try primary side first with STOP_MARKET order
+            try:
+                client.new_order(
+                    symbol=symbol,
+                    side=primary_side,
+                    type='STOP_MARKET',
+                    timeInForce='GTC',
+                    quantity=quantity,
+                    stopPrice=stop_price,
+                    reduceOnly=True
+                )
+                return jsonify({'success': True, 'message': f'✅ Market stop order placed ({primary_side} side).'})
+            
+            except Exception as primary_error:
+                # If primary side fails with trigger error, try secondary side
+                if "-2021" in str(primary_error) or "would immediately trigger" in str(primary_error).lower():
+                    try:
+                        client.new_order(
+                            symbol=symbol,
+                            side=secondary_side,
+                            type='STOP_MARKET',
+                            timeInForce='GTC',
+                            quantity=quantity,
+                            stopPrice=stop_price,
+                            reduceOnly=True
+                        )
+                        return jsonify({'success': True, 'message': f'✅ Market stop order placed ({secondary_side} side).'})
+                    except Exception as secondary_error:
+                        return jsonify({'success': False, 'message': f'Both sides failed. Primary: {str(primary_error)}, Secondary: {str(secondary_error)}'})
+                else:
+                    # If it's not a trigger error, return the original error
+                    return jsonify({'success': False, 'message': str(primary_error)})
+
         else:
             return jsonify({'success': False, 'message': 'Invalid order type.'})
 
