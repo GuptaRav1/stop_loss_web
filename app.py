@@ -147,6 +147,67 @@ def execute_trade():
                     # If it's not a trigger error, return the original error
                     return jsonify({'success': False, 'message': str(primary_error)})
 
+        elif data['type'] == 'market':
+            side = data['side']  # 'BUY' or 'SELL'
+            leverage = data.get('leverage')
+            
+            if leverage:
+                client.change_leverage(symbol=symbol, leverage=leverage)
+            
+            client.new_order(
+                symbol=symbol,
+                side=side,
+                type='MARKET',
+                quantity=quantity
+            )
+            return jsonify({'success': True, 'message': f'✅ Market {side.lower()} order executed.'})
+
+        elif data['type'] == 'take_profit':
+            target_price = data['target_price']
+            
+            # Get current market price
+            ticker = client.ticker_price(symbol=symbol)
+            current_price = float(ticker['price'])
+            
+            # Determine the appropriate side based on current price vs target price
+            if target_price > current_price:
+                # Target price is above current price, so we want to SELL when price goes up (take profit on long)
+                primary_side = 'SELL'
+                secondary_side = 'BUY'
+            else:
+                # Target price is below current price, so we want to BUY when price goes down (take profit on short)
+                primary_side = 'BUY'
+                secondary_side = 'SELL'
+            
+            # Try primary side first with LIMIT order for better fees (market maker)
+            try:
+                client.new_order(
+                    symbol=symbol,
+                    side=primary_side,
+                    type='LIMIT',
+                    timeInForce='GTC',
+                    quantity=quantity,
+                    price=target_price,
+                    reduceOnly=True
+                )
+                return jsonify({'success': True, 'message': f'✅ Take profit limit order placed ({primary_side} side) - Market maker fees!'})
+            
+            except Exception as primary_error:
+                # If primary side fails, try secondary side
+                try:
+                    client.new_order(
+                        symbol=symbol,
+                        side=secondary_side,
+                        type='LIMIT',
+                        timeInForce='GTC',
+                        quantity=quantity,
+                        price=target_price,
+                        reduceOnly=True
+                    )
+                    return jsonify({'success': True, 'message': f'✅ Take profit limit order placed ({secondary_side} side) - Market maker fees!'})
+                except Exception as secondary_error:
+                    return jsonify({'success': False, 'message': f'Both sides failed. Primary: {str(primary_error)}, Secondary: {str(secondary_error)}'})
+
         else:
             return jsonify({'success': False, 'message': 'Invalid order type.'})
 

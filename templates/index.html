@@ -158,6 +158,40 @@
             background: #2d6b2d;
         }
 
+        .button.market-buy {
+            background: #1a4d1a;
+        }
+
+        .button.market-buy:hover {
+            background: #2d6b2d;
+        }
+
+        .button.market-sell {
+            background: #52171c;
+        }
+
+        .button.market-sell:hover {
+            background: #61104f;
+        }
+
+        .button.take-profit {
+            background: #1a3d4d;
+        }
+
+        .button.take-profit:hover {
+            background: #2d5b6b;
+        }
+
+        .market-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .market-buttons .button {
+            margin-top: 0;
+        }
+
         .result {
             margin-top: 16px;
             padding: 12px 16px;
@@ -216,6 +250,7 @@
             padding-right: 24px;
         }
 
+    
 
         .price-grid {
             display: grid;
@@ -254,6 +289,7 @@
 </head>
 
 <body>
+
     <!-- Common Parameters Section -->
     <div class="common-params">
         <div class="params-grid">
@@ -301,8 +337,7 @@
         <!-- Stop Limit Orders -->
         <div class="box">
             <h2>🛑 Stop Limit Order</h2>
-   
-            
+    
             <form id="stopForm">
                 <div class="form-group">
                     <label>Stop-Limit Price</label>
@@ -318,7 +353,6 @@
         <!-- Market Stop for Open Orders -->
         <div class="box">
             <h2>🚨 Mkt Stop for Open Order</h2>
-       
             
             <form id="marketStopForm">
                 <div class="form-group">
@@ -329,6 +363,38 @@
                 </div>
                 <button type="submit" class="button market-stop">🔥 Place Stop Order</button>
                 <div id="market_stop_result" class="result"></div>
+            </form>
+        </div>
+
+        <!-- Market Orders -->
+        <div class="box">
+            <h2>⚡ Market Orders</h2>
+          
+            <form id="marketForm">
+                <div class="form-group">
+                    <label>Order Type</label>
+                    <div class="market-buttons">
+                        <button type="button" class="button market-buy" id="marketBuyBtn">📈 Buy at Market</button>
+                        <button type="button" class="button market-sell" id="marketSellBtn">📉 Sell at Market</button>
+                    </div>
+                </div>
+                <div id="market_result" class="result"></div>
+            </form>
+        </div>
+
+        <!-- Take Profit Orders -->
+        <div class="box">
+            <h2>🎯 Take Profit Target</h2>
+           
+            <form id="takeProfitForm">
+                <div class="form-group">
+                    <label>Target Price</label>
+                    <div class="price-input">
+                        <input type="number" id="target_price" value="0.0150000" step="0.0000001">
+                    </div>
+                </div>
+                <button type="submit" class="button take-profit">🎯 Set Take Profit Limit</button>
+                <div id="take_profit_result" class="result"></div>
             </form>
         </div>
     </div>
@@ -353,7 +419,7 @@
 
         // Limit Orders Form
         document.getElementById('limitForm').addEventListener('submit', async function (e) {
-            // e.preventDefault();
+            e.preventDefault();
             const resultDiv = document.getElementById('limit_result');
             resultDiv.innerHTML = 'Submitting...';
             resultDiv.className = 'result show';
@@ -382,7 +448,7 @@
 
         // Stop Limit Orders Form
         document.getElementById('stopForm').addEventListener('submit', async function (e) {
-            // e.preventDefault();
+            e.preventDefault();
             const resultDiv = document.getElementById('stop_result');
             resultDiv.innerHTML = 'Submitting...';
             resultDiv.className = 'result show';
@@ -410,7 +476,7 @@
 
         // Market Stop Orders Form
         document.getElementById('marketStopForm').addEventListener('submit', async function (e) {
-            // e.preventDefault();
+            e.preventDefault();
             const resultDiv = document.getElementById('market_stop_result');
             resultDiv.innerHTML = 'Submitting...';
             resultDiv.className = 'result show';
@@ -436,6 +502,90 @@
             }
         });
 
+        // Take Profit Orders Form
+        document.getElementById('takeProfitForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('take_profit_result');
+            resultDiv.innerHTML = 'Submitting...';
+            resultDiv.className = 'result show';
+
+            const commonParams = getCommonParams();
+            const data = {
+                type: "take_profit",
+                ...commonParams,
+                target_price: parseFloat(document.getElementById('target_price').value)
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('take_profit_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+            } catch (error) {
+                showResult('take_profit_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
+        // Market Orders - Buy Button
+        document.getElementById('marketBuyBtn').addEventListener('click', async function (e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('market_result');
+            resultDiv.innerHTML = 'Executing Buy Order...';
+            resultDiv.className = 'result show';
+
+            const commonParams = getCommonParams();
+            const data = {
+                type: "market",
+                ...commonParams,
+                side: "BUY"
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('market_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+            } catch (error) {
+                showResult('market_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
+        // Market Orders - Sell Button
+        document.getElementById('marketSellBtn').addEventListener('click', async function (e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('market_result');
+            resultDiv.innerHTML = 'Executing Sell Order...';
+            resultDiv.className = 'result show';
+
+            const commonParams = getCommonParams();
+            const data = {
+                type: "market",
+                ...commonParams,
+                side: "SELL"
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('market_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+            } catch (error) {
+                showResult('market_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
         // Auto-paste clipboard content on click for price inputs
         function addClipboardPaste(elementId) {
             document.getElementById(elementId).addEventListener('click', async function () {
@@ -458,6 +608,7 @@
         addClipboardPaste('sell_price');
         addClipboardPaste('stop_price');
         addClipboardPaste('market_stop_price');
+        addClipboardPaste('target_price');
     </script>
 </body>
 
