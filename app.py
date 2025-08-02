@@ -208,6 +208,82 @@ def execute_trade():
                 except Exception as secondary_error:
                     return jsonify({'success': False, 'message': f'Both sides failed. Primary: {str(primary_error)}, Secondary: {str(secondary_error)}'})
 
+        elif data['type'] == 'auto_sl_tp':
+            rr_percentage = data['rr_percentage'] / 100  # Convert percentage to decimal (same for both SL and TP)
+            
+            # Get current market price
+            ticker = client.ticker_price(symbol=symbol)
+            current_price = float(ticker['price'])
+            
+            # Get current position to determine direction
+            try:
+                positions = client.get_position_risk(symbol=symbol)
+                position_amt = 0
+                for pos in positions:
+                    if pos['symbol'] == symbol:
+                        position_amt = float(pos['positionAmt'])
+                        break
+                
+                if position_amt == 0:
+                    return jsonify({'success': False, 'message': 'No open position found for this symbol.'})
+                
+                # Determine if long or short position
+                is_long = position_amt > 0
+                
+                if is_long:
+                    # Long position: SL below current price, TP above current price
+                    sl_price = current_price * (1 - rr_percentage)
+                    tp_price = current_price * (1 + rr_percentage)
+                    sl_side = 'SELL'
+                    tp_side = 'SELL'
+                else:
+                    # Short position: SL above current price, TP below current price
+                    sl_price = current_price * (1 + rr_percentage)
+                    tp_price = current_price * (1 - rr_percentage)
+                    sl_side = 'BUY'
+                    tp_side = 'BUY'
+                
+                # Use absolute value of position amount for order quantity
+                position_quantity = abs(position_amt)
+                
+                results = []
+                
+                # Place Stop Loss (Market Stop)
+                try:
+                    client.new_order(
+                        symbol=symbol,
+                        side=sl_side,
+                        type='STOP',
+                        timeInForce='GTC',
+                        quantity=position_quantity,
+                        stopPrice=sl_price,
+                        price=sl_price,
+                        reduceOnly=True
+                    )
+                    results.append(f'✅ Stop Loss set at ${sl_price:.6f}')
+                except Exception as sl_error:
+                    results.append(f'❌ Stop Loss failed: {str(sl_error)}')
+                
+                # Place Take Profit (Limit Order)
+                try:
+                    client.new_order(
+                        symbol=symbol,
+                        side=tp_side,
+                        type='LIMIT',
+                        timeInForce='GTC',
+                        quantity=position_quantity,
+                        price=tp_price,
+                        reduceOnly=True
+                    )
+                    results.append(f'✅ Take Profit set at ${tp_price:.6f}')
+                except Exception as tp_error:
+                    results.append(f'❌ Take Profit failed: {str(tp_error)}')
+                
+                return jsonify({'success': True, 'message': ' | '.join(results)})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'message': f'Error getting position: {str(e)}'})
+
         else:
             return jsonify({'success': False, 'message': 'Invalid order type.'})
 

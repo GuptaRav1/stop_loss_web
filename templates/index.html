@@ -17,6 +17,7 @@
             line-height: 1.6;
             padding: 20px;
         }
+
         /* Common Trade Parameters Section */
         .common-params {
             max-width: 600px;
@@ -182,6 +183,14 @@
             background: #2d5b6b;
         }
 
+        .button.auto-sl-tp {
+            background: #4d1a4d;
+        }
+
+        .button.auto-sl-tp:hover {
+            background: #6b2d6b;
+        }
+
         .market-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -250,8 +259,6 @@
             padding-right: 24px;
         }
 
-    
-
         .price-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -289,17 +296,16 @@
 </head>
 
 <body>
-
     <!-- Common Parameters Section -->
     <div class="common-params">
         <div class="params-grid">
             <div class="form-group">
                 <label>Symbol</label>
-                <input type="text" id="common_symbol" value="1000PEPEUSDC">
+                <input type="text" id="common_symbol" value="BTCUSDT">
             </div>
             <div class="form-group">
                 <label>Quantity</label>
-                <input type="number" id="common_quantity" value="5000">
+                <input type="number" id="common_quantity" value="1200">
             </div>
             <div class="form-group">
                 <label>Leverage</label>
@@ -353,7 +359,7 @@
         <!-- Market Stop for Open Orders -->
         <div class="box">
             <h2>🚨 Mkt Stop for Open Order</h2>
-            
+           
             <form id="marketStopForm">
                 <div class="form-group">
                     <label>Stop Price</label>
@@ -369,7 +375,7 @@
         <!-- Market Orders -->
         <div class="box">
             <h2>⚡ Market Orders</h2>
-          
+         
             <form id="marketForm">
                 <div class="form-group">
                     <label>Order Type</label>
@@ -395,6 +401,22 @@
                 </div>
                 <button type="submit" class="button take-profit">🎯 Set Take Profit Limit</button>
                 <div id="take_profit_result" class="result"></div>
+            </form>
+        </div>
+
+        <!-- Auto SL & TP -->
+        <div class="box">
+            <h2>⚡ Auto SL & TP (1:1 RR)</h2>
+           
+            <form id="autoSlTpForm">
+                <div class="form-group">
+                    <label>Risk/Reward %</label>
+                    <div class="leverage-input">
+                        <input type="number" id="rr_percentage" value="1" step="0.1" min="0.1" max="50">
+                    </div>
+                </div>
+                <button type="submit" class="button auto-sl-tp">⚡ Set 1:1 SL & TP</button>
+                <div id="auto_sl_tp_result" class="result"></div>
             </form>
         </div>
     </div>
@@ -499,6 +521,34 @@
                 showResult('market_stop_result', res.success ? res.message : '❌ ' + res.message, !res.success);
             } catch (error) {
                 showResult('market_stop_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
+        // Auto SL & TP Form
+        document.getElementById('autoSlTpForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('auto_sl_tp_result');
+            resultDiv.innerHTML = 'Setting up SL & TP...';
+            resultDiv.className = 'result show';
+
+            const commonParams = getCommonParams();
+            const data = {
+                type: "auto_sl_tp",
+                symbol: commonParams.symbol, // Only need symbol for this operation
+                rr_percentage: parseFloat(document.getElementById('rr_percentage').value)
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('auto_sl_tp_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+            } catch (error) {
+                showResult('auto_sl_tp_result', '❌ Network error: ' + error.message, true);
             }
         });
 
