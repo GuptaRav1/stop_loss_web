@@ -248,7 +248,7 @@ def execute_trade():
                 
                 results = []
                 
-                # Place Stop Loss (Market Stop)
+                # Place Stop Loss
                 try:
                     client.new_order(
                         symbol=symbol,

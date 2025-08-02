@@ -534,7 +534,7 @@
             const commonParams = getCommonParams();
             const data = {
                 type: "auto_sl_tp",
-                symbol: commonParams.symbol, // Only need symbol for this operation
+                ...commonParams,
                 rr_percentage: parseFloat(document.getElementById('rr_percentage').value)
             };
 
