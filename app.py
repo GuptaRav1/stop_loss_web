@@ -22,10 +22,10 @@ def execute_trade():
         if data['type'] == 'limit':
             buy_price = data['buy_price']
             sell_price = data['sell_price']
-            leverage = data['leverage']
+            # leverage = data['leverage']
 
             client.cancel_open_orders(symbol=symbol)
-            client.change_leverage(symbol=symbol, leverage=leverage)
+            # client.change_leverage(symbol=symbol, leverage=leverage)
 
             client.new_order(
                 symbol=symbol,
@@ -149,10 +149,10 @@ def execute_trade():
 
         elif data['type'] == 'market':
             side = data['side']  # 'BUY' or 'SELL'
-            leverage = data.get('leverage')
+            # leverage = data.get('leverage')
             
-            if leverage:
-                client.change_leverage(symbol=symbol, leverage=leverage)
+            # if leverage:
+                # client.change_leverage(symbol=symbol, leverage=leverage)
             
             client.new_order(
                 symbol=symbol,

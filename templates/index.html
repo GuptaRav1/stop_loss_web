@@ -307,12 +307,12 @@
                 <label>Quantity</label>
                 <input type="number" id="common_quantity" value="15000">
             </div>
-            <div class="form-group">
+            <!-- <div class="form-group">
                 <label>Leverage</label>
                 <div class="leverage-input">
                     <input type="number" id="common_leverage" value="50" min="1" max="125" step="1">
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 
@@ -435,7 +435,7 @@
             return {
                 symbol: document.getElementById('common_symbol').value,
                 quantity: parseFloat(document.getElementById('common_quantity').value),
-                leverage: parseInt(document.getElementById('common_leverage').value)
+                // leverage: parseInt(document.getElementById('common_leverage').value)
             };
         }
 
