@@ -49,6 +49,20 @@ def round_price(price, precision):
     rounded = (decimal_price * multiplier).quantize(Decimal('1'), rounding=ROUND_DOWN) / multiplier
     return float(rounded)
 
+def get_best_bid_ask(symbol):
+    """Get the best bid and ask prices from order book"""
+    try:
+        order_book = client.depth(symbol=symbol, limit=5)
+        best_bid = float(order_book['bids'][0][0])  # Best bid price
+        best_ask = float(order_book['asks'][0][0])  # Best ask price
+        return best_bid, best_ask
+    except Exception as e:
+        print(f"Error getting order book: {e}")
+        # Fallback to ticker price
+        ticker = client.ticker_price(symbol=symbol)
+        current_price = float(ticker['price'])
+        return current_price, current_price
+
 @app.route('/')
 def index():
     return render_template("index.html")
@@ -86,6 +100,37 @@ def execute_trade():
                 price=sell_price
             )
             return jsonify({'success': True, 'message': f'✅ Limit orders placed. Buy: ${buy_price}, Sell: ${sell_price}'})
+
+        elif data['type'] == 'chase':
+            side = data['side']
+            
+            # Get best bid and ask prices
+            best_bid, best_ask = get_best_bid_ask(symbol)
+            
+            if side == 'BUY':
+                # For buy orders, use best bid price to get better position in queue
+                chase_price = round_price(best_bid, precision)
+                order_side = 'BUY'
+            else:
+                # For sell orders, use best ask price to get better position in queue
+                chase_price = round_price(best_ask, precision)
+                order_side = 'SELL'
+            
+            try:
+                client.new_order(
+                    symbol=symbol,
+                    side=order_side,
+                    type='LIMIT',
+                    timeInForce='GTC',
+                    quantity=quantity,
+                    price=chase_price
+                )
+                return jsonify({
+                    'success': True, 
+                    'message': f'✅ Chase {side.lower()} order placed at ${chase_price} (Best {"Bid" if side == "BUY" else "Ask"})'
+                })
+            except Exception as e:
+                return jsonify({'success': False, 'message': f'Chase order failed: {str(e)}'})
 
         elif data['type'] == 'stop':
             stop_price = round_price(data['stop_price'], precision)

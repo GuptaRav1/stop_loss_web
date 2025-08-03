@@ -53,7 +53,7 @@
 
         .tab-navigation-row2 {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 8px;
         }
 
@@ -104,6 +104,14 @@
 
         .tab-btn[data-tab="market"]:hover {
             background: #2d6b2d;
+        }
+
+        .tab-btn[data-tab="chase"] {
+            background: #4d3a1a;
+        }
+
+        .tab-btn[data-tab="chase"]:hover {
+            background: #6b5a2a;
         }
 
         .tab-btn[data-tab="market-stop"] {
@@ -269,6 +277,22 @@
             background: #61104f;
         }
 
+        .button.chase-buy {
+            background: #1a4d1a;
+        }
+
+        .button.chase-buy:hover {
+            background: #2d6b2d;
+        }
+
+        .button.chase-sell {
+            background: #52171c;
+        }
+
+        .button.chase-sell:hover {
+            background: #61104f;
+        }
+
         .button.take-profit {
             background: #1a3d4d;
         }
@@ -291,7 +315,14 @@
             gap: 12px;
         }
 
-        .market-buttons .button {
+        .chase-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .market-buttons .button,
+        .chase-buttons .button {
             margin-top: 0;
         }
 
@@ -359,6 +390,16 @@
             gap: 12px;
         }
 
+        .chase-info {
+            background: rgba(74, 158, 255, 0.1);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #a1a1a1;
+        }
+
         @media (max-width: 768px) {
             .tab-navigation {
                 grid-template-columns: 1fr 1fr;
@@ -414,6 +455,7 @@
             <button class="tab-btn" data-tab="market">Market Orders</button>
         </div>
         <div class="tab-navigation-row2">
+            <button class="tab-btn" data-tab="chase">Chase Orders</button>
             <button class="tab-btn" data-tab="market-stop">Market Stop Order</button>
             <button class="tab-btn" data-tab="take-profit">Take Profit Target</button>
             <button class="tab-btn" data-tab="auto-sl-tp">Auto SL & TP</button>
@@ -478,6 +520,24 @@
                     </div>
                     <div id="market_result" class="result"></div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Chase Orders Tab -->
+        <div class="tab-content" id="chase-tab">
+            <div class="box">
+                <h3>🏃‍♂️ Chase Orders</h3>
+                <div class="chase-info">
+                    Chase orders automatically place limit orders at the current best bid (buy) or ask (sell) price for better positioning in the order book.
+                </div>
+                <div class="form-group">
+                    <label>Chase Order Type</label>
+                    <div class="chase-buttons">
+                        <button type="button" class="button chase-buy" id="chaseBuyBtn">📈 Chase Buy (Best Bid)</button>
+                        <button type="button" class="button chase-sell" id="chaseSellBtn">📉 Chase Sell (Best Ask)</button>
+                    </div>
+                </div>
+                <div id="chase_result" class="result"></div>
             </div>
         </div>
 
@@ -764,6 +824,62 @@
                 showResult('market_result', res.success ? res.message : '❌ ' + res.message, !res.success);
             } catch (error) {
                 showResult('market_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
+        // Chase Orders - Buy Button
+        document.getElementById('chaseBuyBtn').addEventListener('click', async function (e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('chase_result');
+            resultDiv.innerHTML = 'Placing Chase Buy Order...';
+            resultDiv.className = 'result show';
+
+            const commonParams = getCommonParams();
+            const data = {
+                type: "chase",
+                ...commonParams,
+                side: "BUY"
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('chase_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+            } catch (error) {
+                showResult('chase_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
+        // Chase Orders - Sell Button
+        document.getElementById('chaseSellBtn').addEventListener('click', async function (e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('chase_result');
+            resultDiv.innerHTML = 'Placing Chase Sell Order...';
+            resultDiv.className = 'result show';
+
+            const commonParams = getCommonParams();
+            const data = {
+                type: "chase",
+                ...commonParams,
+                side: "SELL"
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('chase_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+            } catch (error) {
+                showResult('chase_result', '❌ Network error: ' + error.message, true);
             }
         });
 
