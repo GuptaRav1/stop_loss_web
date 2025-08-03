@@ -20,7 +20,7 @@
 
         /* Common Trade Parameters Section */
         .common-params {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto 32px auto;
             background: #161616;
             border: 1px solid #2a2a2a;
@@ -38,16 +38,110 @@
 
         .params-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 16px;
+            margin-bottom: 24px;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
+        /* Tab Navigation */
+        .tab-navigation {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .tab-navigation-row2 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .tab-btn {
+            padding: 12px 16px;
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .tab-btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .tab-btn.active {
+            border-color: #4a9eff;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Individual tab button colors */
+        .tab-btn[data-tab="limit"] {
+            background: #153457;
+        }
+
+        .tab-btn[data-tab="limit"]:hover {
+            background: #204e83;
+        }
+
+        .tab-btn[data-tab="stop"] {
+            background: #52171c;
+        }
+
+        .tab-btn[data-tab="stop"]:hover {
+            background: #721f26;
+        }
+
+        .tab-btn[data-tab="market"] {
+            background: #1a4d1a;
+        }
+
+        .tab-btn[data-tab="market"]:hover {
+            background: #2d6b2d;
+        }
+
+        .tab-btn[data-tab="market-stop"] {
+            background: #4d2a1a;
+        }
+
+        .tab-btn[data-tab="market-stop"]:hover {
+            background: #6b3a2a;
+        }
+
+        .tab-btn[data-tab="take-profit"] {
+            background: #1a3d4d;
+        }
+
+        .tab-btn[data-tab="take-profit"]:hover {
+            background: #2d5b6b;
+        }
+
+        .tab-btn[data-tab="auto-sl-tp"] {
+            background: #4d1a4d;
+        }
+
+        .tab-btn[data-tab="auto-sl-tp"]:hover {
+            background: #6b2d6b;
+        }
+
+        /* Main Content Container */
+        .main-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .box {
@@ -62,7 +156,7 @@
             border-color: #3a3a3a;
         }
 
-        h2 {
+        h3 {
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 20px;
@@ -266,9 +360,12 @@
         }
 
         @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-                gap: 20px;
+            .tab-navigation {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .tab-navigation-row2 {
+                grid-template-columns: 1fr 1fr;
             }
 
             .params-grid {
@@ -298,6 +395,7 @@
 <body>
     <!-- Common Parameters Section -->
     <div class="common-params">
+        <h2>Common Parameters</h2>
         <div class="params-grid">
             <div class="form-group">
                 <label>Symbol</label>
@@ -307,121 +405,155 @@
                 <label>Quantity</label>
                 <input type="number" id="common_quantity" value="15000">
             </div>
-            <!-- <div class="form-group">
-                <label>Leverage</label>
-                <div class="leverage-input">
-                    <input type="number" id="common_leverage" value="50" min="1" max="125" step="1">
-                </div>
-            </div> -->
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="limit">Limit Orders</button>
+            <button class="tab-btn" data-tab="stop">Stop Limit Orders</button>
+            <button class="tab-btn" data-tab="market">Market Orders</button>
+        </div>
+        <div class="tab-navigation-row2">
+            <button class="tab-btn" data-tab="market-stop">Market Stop Order</button>
+            <button class="tab-btn" data-tab="take-profit">Take Profit Target</button>
+            <button class="tab-btn" data-tab="auto-sl-tp">Auto SL & TP</button>
         </div>
     </div>
 
-    <div class="container">
-        <!-- Limit Orders -->
-        <div class="box">
-            <h2>📈 Limit Orders</h2>
-            <form id="limitForm">
-                <div class="price-grid">
-                    <div class="form-group">
-                        <label>Buy Price</label>
-                        <div class="price-input">
-                            <input type="number" id="buy_price" value="0.0022737" step="0.0000001">
+    <!-- Main Content Container -->
+    <div class="main-container">
+        <!-- Limit Orders Tab -->
+        <div class="tab-content active" id="limit-tab">
+            <div class="box">
+                <h3>📈 Limit Orders</h3>
+                <form id="limitForm">
+                    <div class="price-grid">
+                        <div class="form-group">
+                            <label>Buy Price</label>
+                            <div class="price-input">
+                                <input type="number" id="buy_price" value="0.0022737" step="0.0000001">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Sell Price</label>
+                            <div class="price-input">
+                                <input type="number" id="sell_price" value="0.0222912" step="0.0000001">
+                            </div>
                         </div>
                     </div>
+                    <button type="submit" class="button limit">⚡ Place Order</button>
+                    <div id="limit_result" class="result"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Stop Limit Orders Tab -->
+        <div class="tab-content" id="stop-tab">
+            <div class="box">
+                <h3>🛑 Stop Limit Order</h3>
+                <form id="stopForm">
                     <div class="form-group">
-                        <label>Sell Price</label>
+                        <label>Stop-Limit Price</label>
                         <div class="price-input">
-                            <input type="number" id="sell_price" value="0.0222912" step="0.0000001">
+                            <input type="number" id="stop_price" value="0.0121028" step="0.0000001">
                         </div>
                     </div>
-                </div>
-                <button type="submit" class="button limit">⚡ Place Order</button>
-                <div id="limit_result" class="result"></div>
-            </form>
+                    <button type="submit" class="button stop">🎯 Place Stop Limit</button>
+                    <div id="stop_result" class="result"></div>
+                </form>
+            </div>
         </div>
 
-        <!-- Stop Limit Orders -->
-        <div class="box">
-            <h2>🛑 Stop Limit Order</h2>
-    
-            <form id="stopForm">
-                <div class="form-group">
-                    <label>Stop-Limit Price</label>
-                    <div class="price-input">
-                        <input type="number" id="stop_price" value="0.0121028" step="0.0000001">
+        <!-- Market Orders Tab -->
+        <div class="tab-content" id="market-tab">
+            <div class="box">
+                <h3>⚡ Market Orders</h3>
+                <form id="marketForm">
+                    <div class="form-group">
+                        <label>Order Type</label>
+                        <div class="market-buttons">
+                            <button type="button" class="button market-buy" id="marketBuyBtn">📈 Buy at Market</button>
+                            <button type="button" class="button market-sell" id="marketSellBtn">📉 Sell at Market</button>
+                        </div>
                     </div>
-                </div>
-                <button type="submit" class="button stop">🎯 Place Stop Limit</button>
-                <div id="stop_result" class="result"></div>
-            </form>
+                    <div id="market_result" class="result"></div>
+                </form>
+            </div>
         </div>
 
-        <!-- Market Stop for Open Orders -->
-        <div class="box">
-            <h2>🚨 Mkt Stop for Open Order</h2>
-           
-            <form id="marketStopForm">
-                <div class="form-group">
-                    <label>Stop Price</label>
-                    <div class="price-input">
-                        <input type="number" id="market_stop_price" value="0.0121028" step="0.0000001">
+        <!-- Market Stop for Open Orders Tab -->
+        <div class="tab-content" id="market-stop-tab">
+            <div class="box">
+                <h3>🚨 Market Stop for Open Order</h3>
+                <form id="marketStopForm">
+                    <div class="form-group">
+                        <label>Stop Price</label>
+                        <div class="price-input">
+                            <input type="number" id="market_stop_price" value="0.0121028" step="0.0000001">
+                        </div>
                     </div>
-                </div>
-                <button type="submit" class="button market-stop">🔥 Place Stop Order</button>
-                <div id="market_stop_result" class="result"></div>
-            </form>
+                    <button type="submit" class="button market-stop">🔥 Place Stop Order</button>
+                    <div id="market_stop_result" class="result"></div>
+                </form>
+            </div>
         </div>
 
-        <!-- Market Orders -->
-        <div class="box">
-            <h2>⚡ Market Orders</h2>
-         
-            <form id="marketForm">
-                <div class="form-group">
-                    <label>Order Type</label>
-                    <div class="market-buttons">
-                        <button type="button" class="button market-buy" id="marketBuyBtn">📈 Buy at Market</button>
-                        <button type="button" class="button market-sell" id="marketSellBtn">📉 Sell at Market</button>
+        <!-- Take Profit Orders Tab -->
+        <div class="tab-content" id="take-profit-tab">
+            <div class="box">
+                <h3>🎯 Take Profit Target</h3>
+                <form id="takeProfitForm">
+                    <div class="form-group">
+                        <label>Target Price</label>
+                        <div class="price-input">
+                            <input type="number" id="target_price" value="0.0150000" step="0.0000001">
+                        </div>
                     </div>
-                </div>
-                <div id="market_result" class="result"></div>
-            </form>
+                    <button type="submit" class="button take-profit">🎯 Set Take Profit Limit</button>
+                    <div id="take_profit_result" class="result"></div>
+                </form>
+            </div>
         </div>
 
-        <!-- Take Profit Orders -->
-        <div class="box">
-            <h2>🎯 Take Profit Target</h2>
-           
-            <form id="takeProfitForm">
-                <div class="form-group">
-                    <label>Target Price</label>
-                    <div class="price-input">
-                        <input type="number" id="target_price" value="0.0150000" step="0.0000001">
+        <!-- Auto SL & TP Tab -->
+        <div class="tab-content" id="auto-sl-tp-tab">
+            <div class="box">
+                <h3>⚡ Auto SL & TP (1:1 RR)</h3>
+                <form id="autoSlTpForm">
+                    <div class="form-group">
+                        <label>Risk/Reward %</label>
+                        <div class="leverage-input">
+                            <input type="number" id="rr_percentage" value="1" step="0.1" min="0.1" max="50">
+                        </div>
                     </div>
-                </div>
-                <button type="submit" class="button take-profit">🎯 Set Take Profit Limit</button>
-                <div id="take_profit_result" class="result"></div>
-            </form>
-        </div>
-
-        <!-- Auto SL & TP -->
-        <div class="box">
-            <h2>⚡ Auto SL & TP (1:1 RR)</h2>
-           
-            <form id="autoSlTpForm">
-                <div class="form-group">
-                    <label>Risk/Reward %</label>
-                    <div class="leverage-input">
-                        <input type="number" id="rr_percentage" value="1" step="0.1" min="0.1" max="50">
-                    </div>
-                </div>
-                <button type="submit" class="button auto-sl-tp">⚡ Set 1:1 SL & TP</button>
-                <div id="auto_sl_tp_result" class="result"></div>
-            </form>
+                    <button type="submit" class="button auto-sl-tp">⚡ Set 1:1 SL & TP</button>
+                    <div id="auto_sl_tp_result" class="result"></div>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(tabId + '-tab').classList.add('active');
+                });
+            });
+        });
+
         function showResult(elementId, message, isError = false) {
             const resultDiv = document.getElementById(elementId);
             resultDiv.innerHTML = message;
@@ -435,7 +567,6 @@
             return {
                 symbol: document.getElementById('common_symbol').value,
                 quantity: parseFloat(document.getElementById('common_quantity').value),
-                // leverage: parseInt(document.getElementById('common_leverage').value)
             };
         }
 
