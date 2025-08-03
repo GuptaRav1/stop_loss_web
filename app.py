@@ -1,12 +1,53 @@
 from flask import Flask, render_template, request, jsonify
 from binance.um_futures import UMFutures
 import os
+from decimal import Decimal, ROUND_DOWN
 
 app = Flask(__name__)
 
 API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 client = UMFutures(key=API_KEY, secret=API_SECRET)
+
+# Cache for symbol info to avoid repeated API calls
+symbol_info_cache = {}
+
+def get_symbol_precision(symbol):
+    """Get price precision for a symbol from Binance exchange info"""
+    if symbol in symbol_info_cache:
+        return symbol_info_cache[symbol]
+    
+    try:
+        exchange_info = client.exchange_info()
+        for symbol_data in exchange_info['symbols']:
+            if symbol_data['symbol'] == symbol:
+                # Find price precision from filters
+                for filter_data in symbol_data['filters']:
+                    if filter_data['filterType'] == 'PRICE_FILTER':
+                        tick_size = filter_data['tickSize']
+                        # Count decimal places in tick size
+                        precision = len(tick_size.rstrip('0').split('.')[-1]) if '.' in tick_size else 0
+                        symbol_info_cache[symbol] = precision
+                        return precision
+        
+        # Default precision if not found
+        symbol_info_cache[symbol] = 8
+        return 8
+    except Exception as e:
+        print(f"Error getting symbol precision: {e}")
+        # Return default precision
+        return 8
+
+def round_price(price, precision):
+    """Round price to the correct precision"""
+    if precision == 0:
+        return int(price)
+    
+    # Use Decimal for precise rounding
+    decimal_price = Decimal(str(price))
+    multiplier = Decimal('10') ** precision
+    rounded = (decimal_price * multiplier).quantize(Decimal('1'), rounding=ROUND_DOWN) / multiplier
+    return float(rounded)
 
 @app.route('/')
 def index():
@@ -19,13 +60,14 @@ def execute_trade():
         symbol = data['symbol']
         quantity = data['quantity']
 
+        # Get symbol precision
+        precision = get_symbol_precision(symbol)
+
         if data['type'] == 'limit':
-            buy_price = data['buy_price']
-            sell_price = data['sell_price']
-            # leverage = data['leverage']
+            buy_price = round_price(data['buy_price'], precision)
+            sell_price = round_price(data['sell_price'], precision)
 
             client.cancel_open_orders(symbol=symbol)
-            # client.change_leverage(symbol=symbol, leverage=leverage)
 
             client.new_order(
                 symbol=symbol,
@@ -43,10 +85,10 @@ def execute_trade():
                 quantity=quantity,
                 price=sell_price
             )
-            return jsonify({'success': True, 'message': '✅ Limit orders placed.'})
+            return jsonify({'success': True, 'message': f'✅ Limit orders placed. Buy: ${buy_price}, Sell: ${sell_price}'})
 
         elif data['type'] == 'stop':
-            stop_price = data['stop_price']
+            stop_price = round_price(data['stop_price'], precision)
             
             # Get current market price
             ticker = client.ticker_price(symbol=symbol)
@@ -54,11 +96,9 @@ def execute_trade():
             
             # Determine the appropriate side based on current price vs stop price
             if stop_price > current_price:
-                # Stop price is above current price, so we want to BUY when price goes up
                 primary_side = 'BUY'
                 secondary_side = 'SELL'
             else:
-                # Stop price is below current price, so we want to SELL when price goes down
                 primary_side = 'SELL'
                 secondary_side = 'BUY'
             
@@ -74,10 +114,9 @@ def execute_trade():
                     price=stop_price,
                     reduceOnly=True
                 )
-                return jsonify({'success': True, 'message': f'✅ Stop-limit order placed ({primary_side} side).'})
+                return jsonify({'success': True, 'message': f'✅ Stop-limit order placed ({primary_side} side) at ${stop_price}.'})
             
             except Exception as primary_error:
-                # If primary side fails with trigger error, try secondary side
                 if "-2021" in str(primary_error) or "would immediately trigger" in str(primary_error).lower():
                     try:
                         client.new_order(
@@ -90,15 +129,14 @@ def execute_trade():
                             price=stop_price,
                             reduceOnly=True
                         )
-                        return jsonify({'success': True, 'message': f'✅ Stop-limit order placed ({secondary_side} side).'})
+                        return jsonify({'success': True, 'message': f'✅ Stop-limit order placed ({secondary_side} side) at ${stop_price}.'})
                     except Exception as secondary_error:
                         return jsonify({'success': False, 'message': f'Both sides failed. Primary: {str(primary_error)}, Secondary: {str(secondary_error)}'})
                 else:
-                    # If it's not a trigger error, return the original error
                     return jsonify({'success': False, 'message': str(primary_error)})
 
         elif data['type'] == 'market_stop':
-            stop_price = data['stop_price']
+            stop_price = round_price(data['stop_price'], precision)
             
             # Get current market price
             ticker = client.ticker_price(symbol=symbol)
@@ -106,11 +144,9 @@ def execute_trade():
             
             # Determine the appropriate side based on current price vs stop price
             if stop_price > current_price:
-                # Stop price is above current price, so we want to BUY when price goes up
                 primary_side = 'BUY'
                 secondary_side = 'SELL'
             else:
-                # Stop price is below current price, so we want to SELL when price goes down
                 primary_side = 'SELL'
                 secondary_side = 'BUY'
             
@@ -125,10 +161,9 @@ def execute_trade():
                     stopPrice=stop_price,
                     reduceOnly=True
                 )
-                return jsonify({'success': True, 'message': f'✅ Market stop order placed ({primary_side} side).'})
+                return jsonify({'success': True, 'message': f'✅ Market stop order placed ({primary_side} side) at ${stop_price}.'})
             
             except Exception as primary_error:
-                # If primary side fails with trigger error, try secondary side
                 if "-2021" in str(primary_error) or "would immediately trigger" in str(primary_error).lower():
                     try:
                         client.new_order(
@@ -140,19 +175,14 @@ def execute_trade():
                             stopPrice=stop_price,
                             reduceOnly=True
                         )
-                        return jsonify({'success': True, 'message': f'✅ Market stop order placed ({secondary_side} side).'})
+                        return jsonify({'success': True, 'message': f'✅ Market stop order placed ({secondary_side} side) at ${stop_price}.'})
                     except Exception as secondary_error:
                         return jsonify({'success': False, 'message': f'Both sides failed. Primary: {str(primary_error)}, Secondary: {str(secondary_error)}'})
                 else:
-                    # If it's not a trigger error, return the original error
                     return jsonify({'success': False, 'message': str(primary_error)})
 
         elif data['type'] == 'market':
-            side = data['side']  # 'BUY' or 'SELL'
-            # leverage = data.get('leverage')
-            
-            # if leverage:
-                # client.change_leverage(symbol=symbol, leverage=leverage)
+            side = data['side']
             
             client.new_order(
                 symbol=symbol,
@@ -163,7 +193,7 @@ def execute_trade():
             return jsonify({'success': True, 'message': f'✅ Market {side.lower()} order executed.'})
 
         elif data['type'] == 'take_profit':
-            target_price = data['target_price']
+            target_price = round_price(data['target_price'], precision)
             
             # Get current market price
             ticker = client.ticker_price(symbol=symbol)
@@ -171,11 +201,9 @@ def execute_trade():
             
             # Determine the appropriate side based on current price vs target price
             if target_price > current_price:
-                # Target price is above current price, so we want to SELL when price goes up (take profit on long)
                 primary_side = 'SELL'
                 secondary_side = 'BUY'
             else:
-                # Target price is below current price, so we want to BUY when price goes down (take profit on short)
                 primary_side = 'BUY'
                 secondary_side = 'SELL'
             
@@ -190,10 +218,9 @@ def execute_trade():
                     price=target_price,
                     reduceOnly=True
                 )
-                return jsonify({'success': True, 'message': f'✅ Take profit limit order placed ({primary_side} side) - Market maker fees!'})
+                return jsonify({'success': True, 'message': f'✅ Take profit limit order placed ({primary_side} side) at ${target_price} - Market maker fees!'})
             
             except Exception as primary_error:
-                # If primary side fails, try secondary side
                 try:
                     client.new_order(
                         symbol=symbol,
@@ -204,12 +231,12 @@ def execute_trade():
                         price=target_price,
                         reduceOnly=True
                     )
-                    return jsonify({'success': True, 'message': f'✅ Take profit limit order placed ({secondary_side} side) - Market maker fees!'})
+                    return jsonify({'success': True, 'message': f'✅ Take profit limit order placed ({secondary_side} side) at ${target_price} - Market maker fees!'})
                 except Exception as secondary_error:
                     return jsonify({'success': False, 'message': f'Both sides failed. Primary: {str(primary_error)}, Secondary: {str(secondary_error)}'})
 
         elif data['type'] == 'auto_sl_tp':
-            rr_percentage = data['rr_percentage'] / 100  # Convert percentage to decimal (same for both SL and TP)
+            rr_percentage = data['rr_percentage'] / 100
             
             # Get current market price
             ticker = client.ticker_price(symbol=symbol)
@@ -232,14 +259,14 @@ def execute_trade():
                 
                 if is_long:
                     # Long position: SL below current price, TP above current price
-                    sl_price = current_price * (1 - rr_percentage)
-                    tp_price = current_price * (1 + rr_percentage)
+                    sl_price = round_price(current_price * (1 - rr_percentage), precision)
+                    tp_price = round_price(current_price * (1 + rr_percentage), precision)
                     sl_side = 'SELL'
                     tp_side = 'SELL'
                 else:
                     # Short position: SL above current price, TP below current price
-                    sl_price = current_price * (1 + rr_percentage)
-                    tp_price = current_price * (1 - rr_percentage)
+                    sl_price = round_price(current_price * (1 + rr_percentage), precision)
+                    tp_price = round_price(current_price * (1 - rr_percentage), precision)
                     sl_side = 'BUY'
                     tp_side = 'BUY'
                 
@@ -260,7 +287,7 @@ def execute_trade():
                         price=sl_price,
                         reduceOnly=True
                     )
-                    results.append(f'✅ Stop Loss set at ${sl_price:.6f}')
+                    results.append(f'✅ Stop Loss set at ${sl_price}')
                 except Exception as sl_error:
                     results.append(f'❌ Stop Loss failed: {str(sl_error)}')
                 
@@ -275,7 +302,7 @@ def execute_trade():
                         price=tp_price,
                         reduceOnly=True
                     )
-                    results.append(f'✅ Take Profit set at ${tp_price:.6f}')
+                    results.append(f'✅ Take Profit set at ${tp_price}')
                 except Exception as tp_error:
                     results.append(f'❌ Take Profit failed: {str(tp_error)}')
                 
