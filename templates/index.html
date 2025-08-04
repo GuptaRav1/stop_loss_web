@@ -581,8 +581,42 @@
     </div>
 
     <script>
+        // Load saved values from localStorage on page load
+        function loadSavedValues() {
+            const savedSymbol = localStorage.getItem('trading_symbol');
+            const savedQuantity = localStorage.getItem('trading_quantity');
+            
+            if (savedSymbol) {
+                document.getElementById('common_symbol').value = savedSymbol;
+            }
+            
+            if (savedQuantity) {
+                document.getElementById('common_quantity').value = savedQuantity;
+            }
+        }
+
+        // Save values to localStorage when they change
+        function setupValuePersistence() {
+            const symbolInput = document.getElementById('common_symbol');
+            const quantityInput = document.getElementById('common_quantity');
+            
+            symbolInput.addEventListener('input', function() {
+                localStorage.setItem('trading_symbol', this.value);
+            });
+            
+            quantityInput.addEventListener('input', function() {
+                localStorage.setItem('trading_quantity', this.value);
+            });
+        }
+
         // Tab functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // Load saved values first
+            loadSavedValues();
+            
+            // Setup value persistence
+            setupValuePersistence();
+            
             const tabButtons = document.querySelectorAll('.tab-btn');
             const tabContents = document.querySelectorAll('.tab-content');
 
