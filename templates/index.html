@@ -675,6 +675,12 @@
 
                 const res = await response.json();
                 showResult('limit_result', res.success ? res.message : '❌ ' + res.message, !res.success);
+                
+                // Reset limit form values to defaults if order was successful
+                if (res.success) {
+                    document.getElementById('buy_price').value = '0.0022737';
+                    document.getElementById('sell_price').value = '0.0222912';
+                }
             } catch (error) {
                 showResult('limit_result', '❌ Network error: ' + error.message, true);
             }
