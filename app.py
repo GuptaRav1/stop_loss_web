@@ -78,29 +78,19 @@ def execute_trade():
         precision = get_symbol_precision(symbol)
 
         if data['type'] == 'limit':
-            buy_price = round_price(data['buy_price'], precision)
-            sell_price = round_price(data['sell_price'], precision)
-
-            client.cancel_open_orders(symbol=symbol)
+            side = data['side']
+            price = round_price(data['price'], precision)
 
             client.new_order(
                 symbol=symbol,
-                side='BUY',
+                side=side,
                 type='LIMIT',
                 timeInForce='GTC',
                 quantity=quantity,
-                price=buy_price
+                price=price
             )
-            client.new_order(
-                symbol=symbol,
-                side='SELL',
-                type='LIMIT',
-                timeInForce='GTC',
-                quantity=quantity,
-                price=sell_price
-            )
-            return jsonify({'success': True, 'message': f'✅ Limit orders placed. Buy: ${buy_price}, Sell: ${sell_price}'})
-
+            return jsonify({'success': True, 'message': f'✅ Limit {side.lower()} order placed at ${price}'})
+                
         elif data['type'] == 'chase':
             side = data['side']
             

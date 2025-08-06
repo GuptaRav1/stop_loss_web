@@ -437,7 +437,7 @@
                 <input type="number" id="common_quantity" value="15000">
             </div>
         </div>
-        
+
         <!-- Tab Navigation -->
         <div class="tab-navigation">
             <button class="tab-btn active" data-tab="limit">Limit Orders</button>
@@ -455,27 +455,29 @@
     <!-- Main Content Container -->
     <div class="main-container">
         <!-- Limit Orders Tab -->
+        <!-- Limit Orders Tab -->
         <div class="tab-content active" id="limit-tab">
             <div class="box">
                 <h3>📈 Limit Orders</h3>
-                <form id="limitForm">
-                    <div class="price-grid">
-                        <div class="form-group">
-                            <label>Buy Price</label>
-                            <div class="price-input">
-                                <input type="number" id="buy_price" value="0.0022737" step="0.0000001">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Sell Price</label>
-                            <div class="price-input">
-                                <input type="number" id="sell_price" value="0.0222912" step="0.0000001">
-                            </div>
+                <div class="price-grid">
+                    <div class="form-group">
+                        <label>Buy Price</label>
+                        <div class="price-input">
+                            <input type="number" id="buy_price" value="0.0022737" step="0.0000001">
                         </div>
                     </div>
-                    <button type="submit" class="button limit">⚡ Place Order</button>
-                    <div id="limit_result" class="result"></div>
-                </form>
+                    <div class="form-group">
+                        <label>Sell Price</label>
+                        <div class="price-input">
+                            <input type="number" id="sell_price" value="0.0222912" step="0.0000001">
+                        </div>
+                    </div>
+                </div>
+                <div class="market-buttons">
+                    <button type="button" class="button limit" id="limitBuyBtn">📈 Place Buy Order</button>
+                    <button type="button" class="button limit" id="limitSellBtn">📉 Place Sell Order</button>
+                </div>
+                <div id="limit_result" class="result"></div>
             </div>
         </div>
 
@@ -505,7 +507,8 @@
                         <label>Order Type</label>
                         <div class="market-buttons">
                             <button type="button" class="button market-buy" id="marketBuyBtn">📈 Buy at Market</button>
-                            <button type="button" class="button market-sell" id="marketSellBtn">📉 Sell at Market</button>
+                            <button type="button" class="button market-sell" id="marketSellBtn">📉 Sell at
+                                Market</button>
                         </div>
                     </div>
                     <div id="market_result" class="result"></div>
@@ -521,7 +524,8 @@
                     <label>Chase Order Type</label>
                     <div class="chase-buttons">
                         <button type="button" class="button chase-buy" id="chaseBuyBtn">📈 Chase Buy (Best Bid)</button>
-                        <button type="button" class="button chase-sell" id="chaseSellBtn">📉 Chase Sell (Best Ask)</button>
+                        <button type="button" class="button chase-sell" id="chaseSellBtn">📉 Chase Sell (Best
+                            Ask)</button>
                     </div>
                 </div>
                 <div id="chase_result" class="result"></div>
@@ -585,11 +589,11 @@
         function loadSavedValues() {
             const savedSymbol = localStorage.getItem('trading_symbol');
             const savedQuantity = localStorage.getItem('trading_quantity');
-            
+
             if (savedSymbol) {
                 document.getElementById('common_symbol').value = savedSymbol;
             }
-            
+
             if (savedQuantity) {
                 document.getElementById('common_quantity').value = savedQuantity;
             }
@@ -599,35 +603,35 @@
         function setupValuePersistence() {
             const symbolInput = document.getElementById('common_symbol');
             const quantityInput = document.getElementById('common_quantity');
-            
-            symbolInput.addEventListener('input', function() {
+
+            symbolInput.addEventListener('input', function () {
                 localStorage.setItem('trading_symbol', this.value);
             });
-            
-            quantityInput.addEventListener('input', function() {
+
+            quantityInput.addEventListener('input', function () {
                 localStorage.setItem('trading_quantity', this.value);
             });
         }
 
         // Tab functionality
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Load saved values first
             loadSavedValues();
-            
+
             // Setup value persistence
             setupValuePersistence();
-            
+
             const tabButtons = document.querySelectorAll('.tab-btn');
             const tabContents = document.querySelectorAll('.tab-content');
 
             tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     const tabId = this.getAttribute('data-tab');
-                    
+
                     // Remove active class from all buttons and contents
                     tabButtons.forEach(btn => btn.classList.remove('active'));
                     tabContents.forEach(content => content.classList.remove('active'));
-                    
+
                     // Add active class to clicked button and corresponding content
                     this.classList.add('active');
                     document.getElementById(tabId + '-tab').classList.add('active');
@@ -652,18 +656,19 @@
         }
 
         // Limit Orders Form
-        document.getElementById('limitForm').addEventListener('submit', async function (e) {
+        // Limit Buy Order Button
+        document.getElementById('limitBuyBtn').addEventListener('click', async function (e) {
             e.preventDefault();
             const resultDiv = document.getElementById('limit_result');
-            resultDiv.innerHTML = 'Submitting...';
+            resultDiv.innerHTML = 'Placing Buy Order...';
             resultDiv.className = 'result show';
 
             const commonParams = getCommonParams();
             const data = {
                 type: "limit",
                 ...commonParams,
-                buy_price: parseFloat(document.getElementById('buy_price').value),
-                sell_price: parseFloat(document.getElementById('sell_price').value)
+                side: "BUY",
+                price: parseFloat(document.getElementById('buy_price').value)
             };
 
             try {
@@ -675,12 +680,35 @@
 
                 const res = await response.json();
                 showResult('limit_result', res.success ? res.message : '❌ ' + res.message, !res.success);
-                
-                // Reset limit form values to defaults if order was successful
-                if (res.success) {
-                    document.getElementById('buy_price').value = '0.0022737';
-                    document.getElementById('sell_price').value = '0.0222912';
-                }
+            } catch (error) {
+                showResult('limit_result', '❌ Network error: ' + error.message, true);
+            }
+        });
+
+        // Limit Sell Order Button
+        document.getElementById('limitSellBtn').addEventListener('click', async function (e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('limit_result');
+            resultDiv.innerHTML = 'Placing Sell Order...';
+            resultDiv.className = 'result show';
+
+            const commonParams = getCommonParams();
+            const data = {
+                type: "limit",
+                ...commonParams,
+                side: "SELL",
+                price: parseFloat(document.getElementById('sell_price').value)
+            };
+
+            try {
+                const response = await fetch('/execute_trade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const res = await response.json();
+                showResult('limit_result', res.success ? res.message : '❌ ' + res.message, !res.success);
             } catch (error) {
                 showResult('limit_result', '❌ Network error: ' + error.message, true);
             }
